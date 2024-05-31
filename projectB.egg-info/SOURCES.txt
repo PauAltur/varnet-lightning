@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+setup.py
+projectB/__init__.py
+projectB.egg-info/PKG-INFO
+projectB.egg-info/SOURCES.txt
+projectB.egg-info/dependency_links.txt
+projectB.egg-info/top_level.txt
+projectB/data_handling/__init__.py
+projectB/data_handling/transforms/__init__.py
+projectB/model/__init__.py

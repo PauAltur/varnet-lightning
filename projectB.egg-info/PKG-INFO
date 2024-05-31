@@ -1,0 +1,10 @@
+Metadata-Version: 2.1
+Name: projectB
+Version: 0.1.0
+Summary: My attempt at completing project B as an assignment for the course 'Model and learning-based inverse problems in imaging' at ETH Zurich.
+Author: Pau Altur Pastor
+Author-email: paltur@student.ethz.ch
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.10
