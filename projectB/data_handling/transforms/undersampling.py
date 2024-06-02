@@ -1,19 +1,21 @@
 import numpy as np
-import numpy.typing as npt
+import torch
+import torch.nn as nn
 
 
-class UniformUndersampler:
+class UniformUndersampler(nn.Module):
     """
     Class that implements a uniform undersampling transform for 2D data.
 
     """
 
     def __init__(self, factor: float, hw_center: int, seed: int):
+        super().__init__()
         self.factor = factor
         self.hw_center = hw_center
         self.seed = seed
 
-    def forward(self, data: npt.NDArray) -> npt.NDArray:
+    def forward(self, data: torch.tensor) -> torch.tensor:
         n_lines = np.prod(data.shape[:-1])
         original_shape = data.shape
 
