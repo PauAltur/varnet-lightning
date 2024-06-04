@@ -2,9 +2,12 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 import scipy
+
+# from skimage.measure import compare_ssim
+import torch
 from scipy.io import savemat
-from skimage.measure import compare_ssim
 
 """ This file is copied from
 https://github.com/VLOGroup/mri-variationalnetwork/blob/master/mriutils.py
@@ -71,7 +74,8 @@ def ifft2c(img):
 
 def mriAdjointOp(rawdata, coilsens, mask):
     """Adjoint MRI Cartesian Operator"""
-    return np.sum(ifft2c(rawdata * mask) * np.conj(coilsens), axis=0)
+    # return np.sum(ifft2c(rawdata * mask) * np.conj(coilsens), axis=0)
+    return ifft2c(rawdata * mask) * np.conj(coilsens)
 
 
 def mriForwardOp(img, coilsens, mask):
@@ -286,35 +290,61 @@ def rmse(img, ref):
     return rmse
 
 
-def ssim(img, ref, dynamic_range=None):
-    """Compute SSIM. If inputs are 3D, average over axis=0.
-    If dynamic_range != None, the same given dynamic range
-    will be used for all slices in the volume.
-    """
-    assert img.ndim == ref.ndim
-    assert img.ndim in [2, 3]
-    if img.ndim == 2:
-        img = img[np.newaxis]
-        ref = ref[np.newaxis]
+# def ssim(img, ref, dynamic_range=None):
+#     """Compute SSIM. If inputs are 3D, average over axis=0.
+#     If dynamic_range != None, the same given dynamic range
+#     will be used for all slices in the volume.
+#     """
+#     assert img.ndim == ref.ndim
+#     assert img.ndim in [2, 3]
+#     if img.ndim == 2:
+#         img = img[np.newaxis]
+#         ref = ref[np.newaxis]
 
-    # ssim averaged over slices
-    ssim_slices = []
-    ref_abs = np.abs(ref)
-    img_abs = np.abs(img)
+#     # ssim averaged over slices
+#     ssim_slices = []
+#     ref_abs = np.abs(ref)
+#     img_abs = np.abs(img)
 
-    for i in range(ref_abs.shape[0]):
-        if dynamic_range is None:
-            drange = np.max(ref_abs[i]) - np.min(ref_abs[i])
-        else:
-            drange = dynamic_range
-        _, ssim_i = compare_ssim(
-            img_abs[i],
-            ref_abs[i],
-            data_range=drange,
-            gaussian_weights=True,
-            use_sample_covariance=False,
-            full=True,
-        )
-        ssim_slices.append(np.mean(ssim_i))
+#     for i in range(ref_abs.shape[0]):
+#         if dynamic_range is None:
+#             drange = np.max(ref_abs[i]) - np.min(ref_abs[i])
+#         else:
+#             drange = dynamic_range
+#         _, ssim_i = compare_ssim(
+#             img_abs[i],
+#             ref_abs[i],
+#             data_range=drange,
+#             gaussian_weights=True,
+#             use_sample_covariance=False,
+#             full=True,
+#         )
+#         ssim_slices.append(np.mean(ssim_i))
 
-    return np.mean(ssim_slices)
+#     return np.mean(ssim_slices)
+
+
+def uniform_undersampling_mask(
+    data: torch.Tensor, factor: float, hw_center: int, seed: int
+) -> npt.NDArray:
+    """Center-preserving uniform undersampling mask."""
+    n_lines = np.prod(data.shape[:-1])
+    original_shape = data.shape
+
+    center_line = n_lines // 2
+    center_lines = np.where(np.arange(n_lines) % center_line == 0)[0][1::2]
+    hw_center_arr = np.arange(-hw_center, hw_center + 1)
+    unselectable_lines = np.concatenate(center_lines[:, None] + hw_center_arr)
+    selectable_lines = np.setdiff1d(np.arange(n_lines), unselectable_lines)
+    selected_lines = np.random.RandomState(seed).choice(
+        selectable_lines, int(factor * n_lines), replace=False
+    )
+    mask = np.zeros((n_lines, data.shape[-1]), dtype=np.complex64)
+    mask[selected_lines] = 1
+    mask = mask.reshape(original_shape)
+    return mask
+
+
+def dummy_coil_sensitivities(data_shape: tuple) -> torch.Tensor:
+    """Dummy coil sensitivities."""
+    return np.ones(data_shape, dtype=np.complex64)
