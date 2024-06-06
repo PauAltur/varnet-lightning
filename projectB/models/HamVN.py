@@ -7,14 +7,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from projectB.optimizers.IIPG import IIPG
-from projectB.utils.fft import fftc2d, ifftc2d
-from projectB.utils.misc import (
-    complex_mul,
-    conj,
-    save_recon,
-    torch_abs,
-    zero_mean_norm_ball,
-)
+from projectB.utils.fft import complex_mul, conj, fftc2d, ifftc2d, torch_abs
+from projectB.utils.misc import save_recon, zero_mean_norm_ball
 
 DEFAULT_OPTS = {
     "kernel_size": 11,
@@ -270,10 +264,10 @@ class VnMriReconCell(nn.Module):
         u_t_imag = F.pad(u_t_imag, [pad, pad, pad, pad], mode="reflect")
         # split the image in real and imaginary part and perform convolution
         u_k_real = F.conv2d(
-            u_t_real, self.conv_kernel[:, :, :, :, 0], stride=1, padding=5
+            u_t_real.float(), self.conv_kernel[:, :, :, :, 0], stride=1, padding=5
         )
         u_k_imag = F.conv2d(
-            u_t_imag, self.conv_kernel[:, :, :, :, 1], stride=1, padding=5
+            u_t_imag.float(), self.conv_kernel[:, :, :, :, 1], stride=1, padding=5
         )
         # add up the convolution results
         u_k = u_k_real + u_k_imag
@@ -333,7 +327,7 @@ class VariationalNetwork(pl.LightningModule):
         return output["u_t"]
 
     def training_step(self, batch, batch_idx):
-        recon_img = self(batch)
+        recon_img = self(batch).real
         ref_img = batch["reference"]
 
         if self.options["loss_type"] == "complex":
@@ -343,21 +337,21 @@ class VariationalNetwork(pl.LightningModule):
             ref_img_mag = torch_abs(ref_img)
             loss = F.mse_loss(recon_img_mag, ref_img_mag)
         loss = self.options["loss_weight"] * loss
-        if batch_idx % (int(200 / self.options["batch_size"] / 4)) == 0:
-            sample_img = save_recon(
-                batch["u_t"],
-                recon_img,
-                ref_img,
-                batch_idx,
-                "save_dir",
-                self.options["error_scale"],
-                False,
-            )
-            sample_img = sample_img[np.newaxis, :, :]
-            self.logger.experiment.add_image(
-                "sample_recon", sample_img.astype(np.uint8), self.log_img_count
-            )
-            self.log_img_count += 1
+        # if batch_idx % (int(200 / self.options["batch_size"] / 4)) == 0:
+        #     sample_img = save_recon(
+        #         batch["u_t"],
+        #         recon_img,
+        #         ref_img,
+        #         batch_idx,
+        #         "save_dir",
+        #         self.options["error_scale"],
+        #         False,
+        #     )
+        #     # sample_img = sample_img[np.newaxis, :, :]
+        #     # self.logger.experiment.add_image(
+        #     #     "sample_recon", sample_img.astype(np.uint8), self.log_img_count
+        #     # )
+        #     self.log_img_count += 1
 
         tensorboard_logs = {"train_loss": loss}
         return {"loss": loss, "log": tensorboard_logs}

@@ -60,7 +60,7 @@ def fftc2d(x):
 
     """
     x = ifftshift(x, axis=(-3, -2))
-    x = torch.fft(x, 2, normalized=True)
+    x = torch.fft.fft2(x, norm="ortho")
     x = fftshift(x, axis=[-2, -3])
     return x
 
@@ -82,7 +82,7 @@ def ifftc2d(x):
     """
 
     x = ifftshift(x, axis=[-2, -3])
-    x = torch.ifft(x, 2, normalized=True)
+    x = torch.fft.ifft2(x, norm="ortho")
     x = fftshift(x, axis=[-2, -3])
     return x
 

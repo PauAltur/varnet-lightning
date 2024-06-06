@@ -4,7 +4,7 @@ import imageio
 import numpy as np
 import torch
 
-from projectB.utils.misc import complex_2_numpy
+from projectB.utils.fft import complex_2_numpy
 
 
 def zero_mean_norm_ball(
