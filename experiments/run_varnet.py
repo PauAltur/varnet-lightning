@@ -61,6 +61,7 @@ parser.add_argument(
 )
 parser.add_argument("--lr", type=float, default=1e-4, help="learning rate")
 parser.add_argument("--epoch", type=int, default=100, help="number of training epoch")
+parser.add_argument("--batch_size", type=int, default=1, help="batch size")
 parser.add_argument("--gpus", type=str, default="1", help="gpu id to use")
 parser.add_argument(
     "--save_dir",
