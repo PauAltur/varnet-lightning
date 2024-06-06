@@ -17,13 +17,16 @@ from projectB.utils.mri import (
 # TODO: This should really be a dataloader rather than a dataset
 
 DEFAULT_OPTS = {
-    "root_dir": "data\\raw",
+    "root_dir": "..\\..\\data\\raw",
     "name": "2dt_heart.mat",
     "factor": 0.25,
     "hw_center": 4,
     "seed": 42,
     "flatten": True,
     "normalization": "max",
+    "mode": "train",
+    "training_set": list(range(325)),
+    "testing_set": list(range(325, 375)),
 }
 
 
@@ -55,7 +58,12 @@ class HeartDataset(Dataset):
         # load images and swap axes so shape is (N, T, H, W)
         data = loadmat(data_path)
         self.ref = data["imgs"].swapaxes(0, 3).swapaxes(1, 2)
-        self.ref = self.ref[:10]
+        if self.options["mode"] == "train":
+            self.ref = self.ref[self.options["training_set"]]
+        elif self.options["mode"] == "test":
+            self.ref = self.ref[self.options["testing_set"]]
+        else:
+            raise ValueError("mode must be either 'train' or 'test'")
 
         # generate masks
         self.masks = uniform_undersampling_mask(

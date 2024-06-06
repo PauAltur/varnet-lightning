@@ -327,7 +327,7 @@ class VariationalNetwork(pl.LightningModule):
         return output["u_t"]
 
     def training_step(self, batch, batch_idx):
-        recon_img = self(batch).real
+        recon_img = self(batch)
         ref_img = batch["reference"]
 
         if self.options["loss_type"] == "complex":
@@ -335,7 +335,7 @@ class VariationalNetwork(pl.LightningModule):
         elif self.options["loss_type"] == "magnitude":
             recon_img_mag = torch_abs(recon_img)
             ref_img_mag = torch_abs(ref_img)
-            loss = F.mse_loss(recon_img_mag, ref_img_mag)
+            loss = F.mse_loss(recon_img_mag.real, ref_img_mag)
         loss = self.options["loss_weight"] * loss
         # if batch_idx % (int(200 / self.options["batch_size"] / 4)) == 0:
         #     sample_img = save_recon(

@@ -1,5 +1,4 @@
 import argparse
-import os
 from pathlib import Path
 
 import pytorch_lightning as pl
@@ -17,7 +16,7 @@ parser.add_argument(
     "--name", type=str, default="2dt_heart.mat", help="name of the dataset to use"
 )
 parser.add_argument(
-    "--root_dir", type=str, default="data\\raw", help="directory of the data"
+    "--root_dir", type=str, default="..\\data\\raw", help="directory of the data"
 )
 parser.add_argument(
     "--sampling_pattern", type=str, default="cartesian", help="type of sampling pattern"
@@ -56,13 +55,12 @@ parser.add_argument(
 parser.add_argument(
     "--loss_type",
     type=str,
-    default="complex",
+    default="magnitude",
     help="compute loss on complex or magnitude image",
 )
 parser.add_argument("--lr", type=float, default=1e-4, help="learning rate")
 parser.add_argument("--epoch", type=int, default=100, help="number of training epoch")
-parser.add_argument("--batch_size", type=int, default=1, help="batch size")
-parser.add_argument("--gpus", type=str, default="1", help="gpu id to use")
+parser.add_argument("--batch_size", type=int, default=10, help="batch size")
 parser.add_argument(
     "--save_dir",
     type=str,
@@ -86,7 +84,6 @@ args = parser.parse_args()
 print_options(parser, args)
 args = vars(args)
 
-os.environ["CUDA_VISIBLE_DEVICES"] = args["gpus"]
 # setting up network
 varnet = VariationalNetwork(**args)
 
@@ -107,7 +104,9 @@ dataloader = DataLoader(
 # start training
 save_dir = Path(args["save_dir"])
 save_dir.mkdir(parents=True, exist_ok=True)
-trainer = pl.Trainer(accelerator="auto", max_epochs=args["epoch"])
+trainer = pl.Trainer(
+    accelerator="auto", devices="auto", strategy="auto", max_epochs=args["epoch"]
+)
 
 if args["mode"] == "train":
     trainer.fit(varnet, dataloader)
