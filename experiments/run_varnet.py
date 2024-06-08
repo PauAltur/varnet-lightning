@@ -79,13 +79,25 @@ parser.add_argument(
     default=1.0,
     help="how much to magnify the error map for display purpose",
 )
+parser.add_argument(
+    "--load_from_checkpoint", type=bool, default=False, help="load from checkpoint"
+)
+parser.add_argument(
+    "--checkpoint_path",
+    type=str,
+    default="lightning_logs\\version_9\\checkpoints\\epoch=67-step=24344.ckpt",
+    help="path to checkpoint",
+)
 
 args = parser.parse_args()
 print_options(parser, args)
 args = vars(args)
 
 # setting up network
-varnet = VariationalNetwork(**args)
+if args["load_from_checkpoint"]:
+    varnet = VariationalNetwork.load_from_checkpoint(args["checkpoint_path"])
+else:
+    varnet = VariationalNetwork(**args)
 
 # setting up data loader
 dataset = HeartDataset(**args)

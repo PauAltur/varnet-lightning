@@ -331,11 +331,11 @@ class VariationalNetwork(pl.LightningModule):
         ref_img = batch["reference"]
 
         if self.options["loss_type"] == "complex":
-            loss = F.mse_loss(recon_img, ref_img)
+            loss = F.mse_loss(recon_img.real, ref_img)
         elif self.options["loss_type"] == "magnitude":
             recon_img_mag = torch_abs(recon_img)
             ref_img_mag = torch_abs(ref_img)
-            loss = F.mse_loss(recon_img_mag.real, ref_img_mag)
+            loss = F.mse_loss(recon_img_mag.real, ref_img_mag.real)
         loss = self.options["loss_weight"] * loss
         # if batch_idx % (int(200 / self.options["batch_size"] / 4)) == 0:
         #     sample_img = save_recon(
@@ -361,7 +361,7 @@ class VariationalNetwork(pl.LightningModule):
         ref_img = batch["reference"]
         recon_img_mag = torch_abs(recon_img)
         ref_img_mag = torch_abs(ref_img)
-        loss = F.mse_loss(recon_img_mag, ref_img_mag)
+        loss = F.mse_loss(recon_img_mag.real, ref_img_mag)
         img_save_dir = Path(self.options["save_dir"]) / (
             "eval_result_img_" + self.options["name"]
         )
@@ -377,7 +377,7 @@ class VariationalNetwork(pl.LightningModule):
         )
         return {"test_loss": loss}
 
-    def test_epoch_end(self, outputs):
+    def on_test_epoch_end(self, outputs):
         test_loss_mean = torch.stack([x["test_loss"] for x in outputs]).mean()
         return {"test_loss": test_loss_mean}
 
