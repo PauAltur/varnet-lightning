@@ -325,7 +325,7 @@ def rmse(img, ref):
 
 
 def uniform_undersampling_mask(
-    data: torch.Tensor, factor: float, hw_center: int, seed: int
+    data: torch.Tensor, factor: float, hw_center: int
 ) -> npt.NDArray:
     """Center-preserving uniform undersampling mask."""
     n_lines = np.prod(data.shape[:-1])
@@ -336,7 +336,7 @@ def uniform_undersampling_mask(
     hw_center_arr = np.arange(-hw_center, hw_center + 1)
     unselectable_lines = np.concatenate(center_lines[:, None] + hw_center_arr)
     selectable_lines = np.setdiff1d(np.arange(n_lines), unselectable_lines)
-    selected_lines = np.random.RandomState(seed).choice(
+    selected_lines = np.random.choice(
         selectable_lines, int(factor * n_lines), replace=False
     )
     mask = np.zeros((n_lines, data.shape[-1]), dtype=np.complex64)

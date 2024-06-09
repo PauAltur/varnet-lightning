@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
 
-from projectB.data_handling.heart_dataset import HeartDataset
+from projectB.datamodule.heart_dataset import HeartDataset
 from projectB.models.HamVN import VariationalNetwork
 from projectB.utils.misc import print_options
 
